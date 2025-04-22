@@ -1755,668 +1755,144 @@
         1024: { slidesPerView: 3 },
       },
     });
+    // script.js
+// Load after Swiper JS and when DOM is ready
 
-    // Cart Functionality
-let cart = [];
-let currentProductId = null;
-let selectedSize = null;
-let selectedColor = null;
+document.addEventListener('DOMContentLoaded', () => {
+  const overlay = document.getElementById('overlay');
+  const hamburger = document.getElementById('hamburger');
+  const navMenu = document.getElementById('nav-menu');
+  const cartIcon = document.getElementById('cartIcon');
+  const cartSidebar = document.getElementById('cartSidebar');
+  const closeCartBtn = document.getElementById('closeCart');
+  const quickViewBtns = document.querySelectorAll('.quick-view-btn');
+  const productModal = document.getElementById('productModal');
+  const closeModalBtn = document.getElementById('closeModal');
+  const faqQuestions = document.querySelectorAll('.faq-question');
 
-// DOM Elements
-const cartIcon = document.getElementById('cartIcon');
-const cartSidebar = document.getElementById('cartSidebar');
-const closeCart = document.getElementById('closeCart');
-const overlay = document.getElementById('overlay');
-const cartItems = document.getElementById('cartItems');
-const emptyCart = document.getElementById('emptyCart');
-const cartTotalSection = document.getElementById('cartTotalSection');
-const cartButtons = document.getElementById('cartButtons');
-const cartCount = document.getElementById('cartCount');
-const cartSubtotal = document.getElementById('cartSubtotal');
-const cartTotal = document.getElementById('cartTotal');
+  let cart = [];
 
-// Mobile Navigation
-const hamburger = document.getElementById('hamburger');
-const navMenu = document.getElementById('nav-menu');
-
-hamburger.addEventListener('click', () => {
-  navMenu.classList.toggle('active');
-});
-
-// Product Modal Elements
-const productModal = document.getElementById('productModal');
-const closeModal = document.getElementById('closeModal');
-const modalImage = document.getElementById('modalImage');
-const modalTitle = document.getElementById('modalTitle');
-const modalPrice = document.getElementById('modalPrice');
-const modalDescription = document.getElementById('modalDescription');
-const modalQuantity = document.getElementById('modalQuantity');
-const modalAddToCart = document.getElementById('modalAddToCart');
-
-// Event Listeners
-cartIcon.addEventListener('click', openCart);
-closeCart.addEventListener('click', closeCart);
-overlay.addEventListener('click', closeCart);
-closeModal.addEventListener('click', closeModal);
-
-// Initialize quick view buttons
-document.querySelectorAll('.quick-view-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const productId = this.getAttribute('data-id');
-    openQuickView(productId);
+  // 1. Hamburger toggle
+  hamburger.addEventListener('click', () => {
+    navMenu.classList.toggle('active');
+    overlay.style.display = navMenu.classList.contains('active') ? 'block' : 'none';
   });
-});
-
-// Initialize FAQ toggles
-document.querySelectorAll('.faq-question').forEach(question => {
-  question.addEventListener('click', function() {
-    toggleFAQ(this);
+  overlay.addEventListener('click', () => {
+    navMenu.classList.remove('active');
+    closeCart();
+    closeModal();
   });
-});
 
-// Smooth scrolling for navigation links
-document.querySelectorAll('nav a, .hero-buttons a, .footer-links a').forEach(link => {
-  link.addEventListener('click', function(e) {
-    const targetId = this.getAttribute('href');
-    if (targetId.startsWith('#')) {
-      e.preventDefault();
-      const targetElement = document.querySelector(targetId);
-      if (targetElement) {
-        window.scrollTo({
-          top: targetElement.offsetTop - 70,
-          behavior: 'smooth'
-        });
-      }
-      // Close mobile menu if open
-      if (navMenu.classList.contains('active')) {
-        navMenu.classList.remove('active');
-      }
-    }
+  // 2. Initialize Swipers
+  document.querySelectorAll('.gallerySwiper').forEach(el => {
+    new Swiper(el, {
+      loop: true,
+      slidesPerView: 1,
+      spaceBetween: 10,
+      breakpoints: { 640: { slidesPerView: 2 }, 768: { slidesPerView: 3 }, 1024: { slidesPerView: 4 }}
+    });
   });
-});
+  new Swiper('.swiper-featured', {
+    loop: true,
+    pagination: { el: '.swiper-pagination', clickable: true },
+    slidesPerView: 1,
+    spaceBetween: 10,
+    breakpoints: { 640: { slidesPerView: 2 }, 768: { slidesPerView: 3 }, 1024: { slidesPerView: 4 }}
+  });
 
-// Cart Functions
-function openCart() {
-  cartSidebar.classList.add('active');
-  overlay.style.display = 'block';
-  document.body.style.overflow = 'hidden';
-}
+  // 3. Cart sidebar
+  cartIcon.addEventListener('click', openCart);
+  closeCartBtn.addEventListener('click', closeCart);
 
-function closeCart() {
-  cartSidebar.classList.remove('active');
-  overlay.style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-function addToCart(id, name, price, image, quantity = 1) {
-  // Check if product already exists in cart
-  const existingItem = cart.find(item => item.id === id);
-
-  if (existingItem) {
-    existingItem.quantity += quantity;
-  } else {
-    cart.push({
-      id,
-      name,
-      price,
-      image,
-      quantity,
-      size: selectedSize || 'M',
-      color: selectedColor || 'Black'
-    });
-  }
-
-  // Reset selections
-  selectedSize = null;
-  selectedColor = null;
-
-  updateCart();
-  showNotification('Product added to cart!');
-  closeModal();
-}
-
-function updateCart() {
-  // Update cart count
-  cartCount.textContent = cart.reduce((total, item) => total + item.quantity, 0);
-
-  // Update cart items display
-  if (cart.length === 0) {
-    emptyCart.style.display = 'block';
-    cartTotalSection.style.display = 'none';
-    cartButtons.style.display = 'none';
-  } else {
-    emptyCart.style.display = 'none';
-    cartTotalSection.style.display = 'block';
-    cartButtons.style.display = 'flex';
-
-    // Clear and rebuild cart items
-    const cartItemsContainer = document.createElement('div');
-    
-    // Calculate total
-    let subtotal = 0;
-    
-    // Create cart items
-    cart.forEach(item => {
-      // Extract numeric price
-      const priceValue = parseFloat(item.price.replace('₦', '').replace(',', ''));
-      const itemTotal = priceValue * item.quantity;
-      subtotal += itemTotal;
-      
-      const cartItemEl = document.createElement('div');
-      cartItemEl.className = 'cart-item';
-      cartItemEl.innerHTML = `
-        <div class="cart-item-image">
-          <img src="${item.image}" alt="${item.name}">
-        </div>
-        <div class="cart-item-info">
-          <h4 class="cart-item-title">${item.name}</h4>
-          <div class="cart-item-price">${item.price}</div>
-          <div>${item.size} / ${item.color}</div>
-          <div class="cart-item-quantity">
-            <button class="quantity-btn" onclick="decreaseQuantity(${item.id})">-</button>
-            <span class="quantity">${item.quantity}</span>
-            <button class="quantity-btn" onclick="increaseQuantity(${item.id})">+</button>
-          </div>
-        </div>
-        <div class="remove-item" onclick="removeFromCart(${item.id})">
-          <i class="fas fa-times"></i>
-        </div>
-      `;
-      cartItemsContainer.appendChild(cartItemEl);
-    });
-    
-    // Replace current cart items with updated ones
-    while (cartItems.firstChild) {
-      cartItems.removeChild(cartItems.firstChild);
-    }
-    cartItems.appendChild(cartItemsContainer);
-    
-    // Update totals
-    cartSubtotal.textContent = `₦${subtotal.toLocaleString()}`;
-    cartTotal.textContent = `₦${subtotal.toLocaleString()}`;
-  }
-  
-  // Save cart to localStorage
-  localStorage.setItem('niffyCart', JSON.stringify(cart));
-}
-
-function increaseQuantity(id) {
-  const item = cart.find(item => item.id === id);
-  if (item) {
-    item.quantity++;
-    updateCart();
-  }
-}
-
-function decreaseQuantity(id) {
-  const item = cart.find(item => item.id === id);
-  if (item) {
-    item.quantity--;
-    if (item.quantity <= 0) {
-      removeFromCart(id);
-    } else {
-      updateCart();
-    }
-  }
-}
-
-function removeFromCart(id) {
-  cart = cart.filter(item => item.id !== id);
-  updateCart();
-}
-
-function clearCart() {
-  cart = [];
-  updateCart();
-  showNotification('Cart cleared!');
-}
-
-// Quick View Modal Functions
-function openQuickView(id) {
-  currentProductId = parseInt(id);
-  
-  // Find product data based on id
-  // This is a simplified example - in a real application, you would fetch this data from a database
-  const products = [
-    { id: 1, name: 'Elegant Dress', price: '₦12,000', image: '7.jpg' },
-    { id: 2, name: 'Chic Jumpsuit', price: '₦15,000', image: '8.jpg' },
-    { id: 3, name: 'Plus Size Collection', price: '₦10,000', image: '5.jpg' },
-    { id: 4, name: 'Tops & Co-ords', price: '₦8,000', image: '2.jpg' },
-    { id: 5, name: 'Casual Collection', price: '₦9,500', image: '3.jpg' },
-    { id: 6, name: 'Premium Wears', price: '₦18,000', image: '4.jpg' },
-    { id: 7, name: 'Exclusive Turkey Collection', price: '₦20,000', image: 'f0.jpg' },
-    { id: 8, name: 'Vietnam Special', price: '₦17,500', image: 'f2.jpg' }
-  ];
-  
-  const product = products.find(p => p.id === currentProductId);
-  
-  if (product) {
-    // Update modal with product details
-    modalImage.src = product.image;
-    modalTitle.textContent = product.name;
-    modalPrice.textContent = product.price;
-    modalQuantity.value = 1;
-    
-    // Reset selections
-    document.querySelectorAll('.size-option').forEach(option => {
-      option.classList.remove('active');
-    });
-    document.querySelectorAll('.color-option').forEach(option => {
-      option.classList.remove('active');
-    });
-    
-    selectedSize = null;
-    selectedColor = null;
-    
-    // Set modal add to cart button event
-    modalAddToCart.onclick = function() {
-      const quantity = parseInt(modalQuantity.value);
-      addToCart(product.id, product.name, product.price, product.image, quantity);
-    };
-    
-    // Open modal
-    productModal.style.display = 'block';
+  function openCart() {
     overlay.style.display = 'block';
-    document.body.style.overflow = 'hidden';
+    cartSidebar.classList.add('active');
+    updateCartUI();
   }
-}
-
-function closeModal() {
-  productModal.style.display = 'none';
-  overlay.style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-// Modal Quantity Functions
-function increaseModalQuantity() {
-  modalQuantity.value = parseInt(modalQuantity.value) + 1;
-}
-
-function decreaseModalQuantity() {
-  if (parseInt(modalQuantity.value) > 1) {
-    modalQuantity.value = parseInt(modalQuantity.value) - 1;
+  function closeCart() {
+    overlay.style.display = 'none';
+    cartSidebar.classList.remove('active');
   }
-}
 
-// Selection Functions
-function selectSize(element) {
-  document.querySelectorAll('.size-option').forEach(option => {
-    option.classList.remove('active');
-  });
-  element.classList.add('active');
-  selectedSize = element.textContent;
-}
-
-function selectColor(element) {
-  document.querySelectorAll('.color-option').forEach(option => {
-    option.classList.remove('active');
-  });
-  element.classList.add('active');
-  selectedColor = element.style.backgroundColor === 'rgb(0, 0, 0)' ? 'Black' : 
-                 element.style.backgroundColor === 'rgb(255, 255, 255)' ? 'White' : 
-                 element.style.backgroundColor === 'rgb(211, 84, 0)' ? 'Orange' : 'Blue';
-}
-
-// FAQ Toggle
-function toggleFAQ(element) {
-  const answer = element.nextElementSibling;
-  const icon = element.querySelector('.toggle-icon');
-  
-  if (answer.classList.contains('active')) {
-    answer.classList.remove('active');
-    icon.textContent = '+';
-  } else {
-    answer.classList.add('active');
-    icon.textContent = '-';
-  }
-}
-
-// WhatsApp Checkout
-function checkoutViaWhatsApp() {
-  if (cart.length === 0) return;
-  
-  // Format cart items for WhatsApp message
-  let message = "Hello Niffy Fashion! I would like to place an order for:\n\n";
-  
-  cart.forEach(item => {
-    message += `${item.quantity}x ${item.name} (${item.size}, ${item.color}) - ${item.price}\n`;
-  });
-  
-  message += `\nTotal: ${cartTotal.textContent}`;
-  message += "\n\nPlease confirm if these items are available and how to proceed with payment.";
-  
-  // Encode the message for URL
-  const encodedMessage = encodeURIComponent(message);
-  
-  // Open WhatsApp with the message
-  window.open(`https://wa.me/2348160064121?text=${encodedMessage}`, '_blank');
-}
-
-// Notification system
-function showNotification(message) {
-  // Create notification element
-  const notification = document.createElement('div');
-  notification.className = 'notification';
-  notification.textContent = message;
-  
-  // Style the notification
-  notification.style.position = 'fixed';
-  notification.style.bottom = '20px';
-  notification.style.left = '50%';
-  notification.style.transform = 'translateX(-50%)';
-  notification.style.background = 'var(--primary)';
-  notification.style.color = 'white';
-  notification.style.padding = '10px 20px';
-  notification.style.borderRadius = '5px';
-  notification.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-  notification.style.zIndex = '10000';
-  notification.style.opacity = '0';
-  notification.style.transition = 'opacity 0.3s ease';
-  
-  // Add to body
-  document.body.appendChild(notification);
-  
-  // Animate in
-  setTimeout(() => {
-    notification.style.opacity = '1';
-  }, 10);
-  
-  // Remove after delay
-  setTimeout(() => {
-    notification.style.opacity = '0';
-    setTimeout(() => {
-      document.body.removeChild(notification);
-    }, 300);
-  }, 3000);
-}
-
-// Load cart from localStorage when page loads
-window.addEventListener('DOMContentLoaded', () => {
-  const savedCart = localStorage.getItem('niffyCart');
-  if (savedCart) {
-    try {
-      cart = JSON.parse(savedCart);
-      updateCart();
-    } catch (error) {
-      console.error('Error loading cart from localStorage:', error);
-    }
-  }
-  
-  // Initialize newsletter form
-  const newsletterForm = document.querySelector('.newsletter-form');
-  if (newsletterForm) {
-    newsletterForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const email = this.querySelector('input').value;
-      if (email) {
-        showNotification('Thank you for subscribing to our newsletter!');
-        this.reset();
-      }
-    });
-  }
-});
-
-// Update WhatsApp float button with correct number
-window.addEventListener('load', () => {
-  const whatsappFloat = document.querySelector('.whatsapp-float');
-  if (whatsappFloat) {
-    whatsappFloat.href = 'https://wa.me/2348160064121';
-  }
-});
-function setVhVariable() {
-    let vh = window.innerHeight * 0.01;
-    document.documentElement.style.setProperty('--vh', `${vh}px`);
-  }
-  
-  window.addEventListener('resize', setVhVariable);
-  window.addEventListener('orientationchange', setVhVariable);
-  setVhVariable();
-  
-  // Add placeholder images fallback
-  document.addEventListener('DOMContentLoaded', function() {
-    const images = document.querySelectorAll('img');
-    images.forEach(img => {
-      img.onerror = function() {
-        // Replace broken image with a color placeholder
-        this.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200"><rect width="300" height="200" fill="%23f39c12"/><text x="50%" y="50%" font-family="Arial" font-size="36" text-anchor="middle" fill="white">Niffy Fashion</text></svg>';
-      };
-    });
-  });
-  // Add this code to the existing JavaScript file
-
-// Recently viewed products
-let recentlyViewed = [];
-const MAX_RECENTLY_VIEWED = 4;
-
-function addToRecentlyViewed(productId) {
-  // Don't add if already the most recent
-  if (recentlyViewed[0] === productId) return;
-  
-  // Remove if exists elsewhere in the array
-  recentlyViewed = recentlyViewed.filter(id => id !== productId);
-  
-  // Add to front of array
-  recentlyViewed.unshift(productId);
-  
-  // Keep array at max length
-  if (recentlyViewed.length > MAX_RECENTLY_VIEWED) {
-    recentlyViewed.pop();
-  }
-  
-  // Save to localStorage
-  localStorage.setItem('niffyRecentlyViewed', JSON.stringify(recentlyViewed));
-}
-
-// Load recently viewed products
-function loadRecentlyViewed() {
-  const saved = localStorage.getItem('niffyRecentlyViewed');
-  if (saved) {
-    try {
-      recentlyViewed = JSON.parse(saved);
-    } catch (error) {
-      console.error('Error loading recently viewed products:', error);
-    }
-  }
-}
-
-// Back to top button functionality
-function addBackToTopButton() {
-  const button = document.createElement('button');
-  button.innerHTML = '<i class="fas fa-arrow-up"></i>';
-  button.className = 'back-to-top';
-  button.style.position = 'fixed';
-  button.style.bottom = '90px';
-  button.style.right = '20px';
-  button.style.display = 'none';
-  button.style.backgroundColor = 'var(--primary)';
-  button.style.color = 'white';
-  button.style.width = '50px';
-  button.style.height = '50px';
-  button.style.borderRadius = '50%';
-  button.style.border = 'none';
-  button.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-  button.style.cursor = 'pointer';
-  button.style.zIndex = '99';
-  button.style.transition = 'all 0.3s ease';
-  
-  document.body.appendChild(button);
-  
-  button.addEventListener('click', () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  });
-  
-  window.addEventListener('scroll', () => {
-    if (window.pageYOffset > 300) {
-      button.style.display = 'block';
+  // 4. Add to Cart logic
+  window.addToCart = function(id, title, price, image) {
+    const numericPrice = parseInt(price.replace(/\D/g, ''));
+    const existing = cart.find(item => item.id === id);
+    if (existing) {
+      existing.quantity++;
     } else {
-      button.style.display = 'none';
+      cart.push({ id, title, price: numericPrice, image, quantity: 1 });
     }
-  });
-}
-
-// Product search functionality
-function setupSearch() {
-  // Create search bar in the header
-  const searchContainer = document.createElement('div');
-  searchContainer.className = 'search-container';
-  searchContainer.style.position = 'relative';
-  
-  const searchInput = document.createElement('input');
-  searchInput.type = 'text';
-  searchInput.placeholder = 'Search products...';
-  searchInput.className = 'search-input';
-  searchInput.style.padding = '8px 15px';
-  searchInput.style.border = 'none';
-  searchInput.style.borderRadius = '20px';
-  searchInput.style.outline = 'none';
-  searchInput.style.width = '0';
-  searchInput.style.opacity = '0';
-  searchInput.style.transition = 'all 0.3s ease';
-  
-  const searchIcon = document.createElement('button');
-  searchIcon.className = 'search-icon';
-  searchIcon.innerHTML = '<i class="fas fa-search"></i>';
-  searchIcon.style.background = 'none';
-  searchIcon.style.border = 'none';
-  searchIcon.style.color = 'white';
-  searchIcon.style.cursor = 'pointer';
-  searchIcon.style.fontSize = '1.2em';
-  
-  searchContainer.appendChild(searchInput);
-  searchContainer.appendChild(searchIcon);
-  
-  // Add search container to nav actions
-  const navActions = document.querySelector('.nav-actions');
-  navActions.insertBefore(searchContainer, navActions.firstChild);
-  
-  // Toggle search input
-  let searchOpen = false;
-  searchIcon.addEventListener('click', () => {
-    if (searchOpen) {
-      if (searchInput.value.trim() !== '') {
-        searchProducts(searchInput.value.trim());
-      } else {
-        searchInput.style.width = '0';
-        searchInput.style.opacity = '0';
-        searchOpen = false;
-      }
-    } else {
-      searchInput.style.width = '150px';
-      searchInput.style.opacity = '1';
-      searchInput.focus();
-      searchOpen = true;
-    }
-  });
-  
-  // Search on enter key
-  searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && searchInput.value.trim() !== '') {
-      searchProducts(searchInput.value.trim());
-    }
-  });
-}
-
-// Product search implementation
-function searchProducts(query) {
-  query = query.toLowerCase();
-  
-  // Get all product cards
-  const products = document.querySelectorAll('.product-card');
-  let foundCount = 0;
-  
-  products.forEach(product => {
-    const title = product.querySelector('.product-title').textContent.toLowerCase();
-    
-    if (title.includes(query)) {
-      product.style.display = 'block';
-      foundCount++;
-      
-      // Highlight matching text
-      const titleElement = product.querySelector('.product-title');
-      const regex = new RegExp(`(${query})`, 'gi');
-      titleElement.innerHTML = titleElement.textContent.replace(
-        regex, '<span style="background-color: rgba(243, 156, 18, 0.3)">$1</span>'
-      );
-    } else {
-      product.style.display = 'none';
-    }
-  });
-  
-  // Scroll to products section
-  document.querySelector('#products').scrollIntoView({ behavior: 'smooth' });
-  
-  // Show search results message
-  const resultsMessage = document.createElement('div');
-  resultsMessage.className = 'search-results-message';
-  resultsMessage.textContent = `Found ${foundCount} products matching "${query}"`;
-  resultsMessage.style.textAlign = 'center';
-  resultsMessage.style.margin = '20px 0';
-  resultsMessage.style.padding = '10px';
-  resultsMessage.style.backgroundColor = 'rgba(243, 156, 18, 0.1)';
-  resultsMessage.style.borderRadius = '5px';
-  
-  const existingMessage = document.querySelector('.search-results-message');
-  if (existingMessage) {
-    existingMessage.remove();
-  }
-  
-  const productsHeader = document.querySelector('#products .section-subtitle');
-  productsHeader.parentNode.insertBefore(resultsMessage, productsHeader.nextSibling);
-  
-  // Add clear search button
-  const clearButton = document.createElement('button');
-  clearButton.textContent = 'Clear Search';
-  clearButton.className = 'btn btn-outline';
-  clearButton.style.marginLeft = '10px';
-  clearButton.style.padding = '5px 15px';
-  clearButton.style.fontSize = '0.9em';
-  
-  resultsMessage.appendChild(clearButton);
-  
-  clearButton.addEventListener('click', () => {
-    // Reset product display
-    products.forEach(product => {
-      product.style.display = 'block';
-      const titleElement = product.querySelector('.product-title');
-      titleElement.innerHTML = titleElement.textContent; // Remove highlighting
-    });
-    
-    // Remove message
-    resultsMessage.remove();
-    
-    // Clear search input
-    document.querySelector('.search-input').value = '';
-  });
-}
-
-// Initialize enhanced features
-window.addEventListener('DOMContentLoaded', () => {
-  loadRecentlyViewed();
-  addBackToTopButton();
-  setupSearch();
-  
-  // Update openQuickView to add products to recently viewed
-  const originalOpenQuickView = window.openQuickView;
-  window.openQuickView = function(id) {
-    addToRecentlyViewed(parseInt(id));
-    originalOpenQuickView(id);
+    updateCartUI();
   };
-  
-  // Add view count to products (simulated)
-  document.querySelectorAll('.product-card').forEach(card => {
-    const viewCount = Math.floor(Math.random() * 50) + 10;
-    const viewsElement = document.createElement('div');
-    viewsElement.className = 'product-views';
-    viewsElement.innerHTML = `<i class="fas fa-eye"></i> ${viewCount} views`;
-    viewsElement.style.fontSize = '0.8em';
-    viewsElement.style.color = '#777';
-    viewsElement.style.marginTop = '5px';
-    
-    const productInfo = card.querySelector('.product-info');
-    productInfo.appendChild(viewsElement);
-  });
+
+  function updateCartUI() {
+    const cartItemsEl = document.getElementById('cartItems');
+    const countEl = document.getElementById('cartCount');
+    const subtotalEl = document.getElementById('cartSubtotal');
+    const totalEl = document.getElementById('cartTotal');
+    const emptyEl = document.getElementById('emptyCart');
+    const totalSection = document.getElementById('cartTotalSection');
+    const buttonsSection = document.getElementById('cartButtons');
+
+    cartItemsEl.innerHTML = '';
+    if (!cart.length) {
+      emptyEl.style.display = 'block';
+      totalSection.style.display = 'none';
+      buttonsSection.style.display = 'none';
+    } else {
+      emptyEl.style.display = 'none';
+      totalSection.style.display = 'block';
+      buttonsSection.style.display = 'flex';
+      let subtotal = 0;
+      cart.forEach(item => {
+        subtotal += item.price * item.quantity;
+        const row = document.createElement('div');
+        row.classList.add('cart-item');
+        row.innerHTML = `
+          <img src="${item.image}" alt="${item.title}" />
+          <div class="item-details">
+            <h4>${item.title}</h4>
+            <p>₦${item.price} × ${item.quantity}</p>
+          </div>`;
+        cartItemsEl.appendChild(row);
+      });
+      subtotalEl.textContent = `₦${subtotal}`;
+      totalEl.textContent = `₦${subtotal}`;
+    }
+    countEl.textContent = cart.reduce((sum, i) => sum + i.quantity, 0);
+  }
+
+  // 5. Quick View Modal
+  quickViewBtns.forEach(btn => btn.addEventListener('click', () => openModal(btn.dataset.id)));
+  closeModalBtn.addEventListener('click', closeModal);
+
+  function openModal(id) {
+    const card = document.querySelector(`.quick-view-btn[data-id="${id}"]`).closest('.product-card');
+    const imgSrc = card.querySelector('img').src;
+    const title = card.querySelector('.product-title').textContent;
+    const price = card.querySelector('.product-price').textContent;
+    document.getElementById('modalImage').src = imgSrc;
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalPrice').textContent = price;
+    overlay.style.display = 'block';
+    productModal.classList.add('active');
+    document.getElementById('modalAddToCart').onclick = () => {
+      addToCart(parseInt(id), title, price, imgSrc);
+      closeModal();
+    };
+  }
+  function closeModal() {
+    overlay.style.display = 'none';
+    productModal.classList.remove('active');
+  }
+
+  // 6. FAQ toggle
+  faqQuestions.forEach(q => q.addEventListener('click', () => {
+    const answer = q.nextElementSibling;
+    answer.classList.toggle('active');
+    q.querySelector('.toggle-icon').textContent = answer.classList.contains('active') ? '-' : '+';
+  }));
 });
+    
   </script>  
