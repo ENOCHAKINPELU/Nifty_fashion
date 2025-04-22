@@ -1534,84 +1534,359 @@
   <a href="https://wa.me/2348031234567" class="whatsapp-float" target="_blank">
     <i class="fab fa-whatsapp"></i>
   </a>
-<!-- JavaScript: SwiperJS for Products Slider and Galleries -->
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-  <!-- JavaScript for Hero Background Slider -->
-  <script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Hero Background Slider
     const hero = document.getElementById('hero');
     const heroImages = [
-      "3.jpg",
-      "2.jpg",
-      "5.jpg",
-      "7.jpg",
-      "4.jpg",
-      "s1.jpg",
-      "s6.jpg", 
-      "f7.jpg"
+      '3.jpg',
+      '2.jpg',
+      '5.jpg',
+      '7.jpg',
+      '4.jpg',
+      's1.jpg',
+      's6.jpg',
+      'f7.jpg'
     ];
     let currentImage = 0;
-    
-    // Set initial background
-    hero.style.backgroundImage = `url(${heroImages[0]})`;
-    
-    // Change background every 3 seconds
-    setInterval(() => {
-      currentImage = (currentImage + 1) % heroImages.length;
-      hero.style.backgroundImage = `url(${heroImages[currentImage]})`;
-    }, 3000);
-      // Featured Products Slider
-    const featuredSwiper = new Swiper(".swiper-featured", {
-      loop: true,
-      slidesPerView: 1,
-      spaceBetween: 20,
-      pagination: {
-        el: ".swiper-pagination",
-        clickable: true,
-      },
-      autoplay: {
-        delay: 3000,
-        disableOnInteraction: false,
-      },
-      breakpoints: {
-        640: { slidesPerView: 1 },
-        768: { slidesPerView: 2 },
-        1024: { slidesPerView: 3 },
-      },
-    });
-    
-    // Male Gallery Slider
-    const maleSwiper = new Swiper("#maleSwiper", {
-      loop: true,
-      slidesPerView: 1,
-      spaceBetween: 20,
-      autoplay: {
-        delay: 2500,
-        disableOnInteraction: false,
-      },
-      breakpoints: {
-        640: { slidesPerView: 1 },
-        768: { slidesPerView: 2 },
-        1024: { slidesPerView: 3 },
-      },
-    });
-    
-    // Female Gallery Slider
-    const femaleSwiper = new Swiper("#femaleSwiper", {
-      loop: true,
-      slidesPerView: 1,
-      spaceBetween: 20,
-      autoplay: {
-        delay: 3000,
-        disableOnInteraction: false,
-      },
-      breakpoints: {
-        640: { slidesPerView: 1 },
-        768: { slidesPerView: 2 },
-        1024: { slidesPerView: 3 },
-      },
-    });
-  </script>
+    if (hero && heroImages.length) {
+      hero.style.backgroundImage = `url(${heroImages[0]})`;
+      setInterval(() => {
+        currentImage = (currentImage + 1) % heroImages.length;
+        hero.style.backgroundImage = `url(${heroImages[currentImage]})`;
+      }, 3000);
+    }
 
+    // Initialize Swiper instances if available
+    if (typeof Swiper !== 'undefined') {
+      // Featured Products Slider
+      new Swiper('.swiper-featured.swiper', {
+        loop: true,
+        slidesPerView: 1,
+        spaceBetween: 20,
+        pagination: { el: '.swiper-pagination', clickable: true },
+        autoplay: { delay: 3000, disableOnInteraction: false },
+        breakpoints: {
+          640: { slidesPerView: 1 },
+          768: { slidesPerView: 2 },
+          1024: { slidesPerView: 3 }
+        }
+      });
+
+      // Male Gallery Slider
+      new Swiper('#maleSwiper.swiper', {
+        loop: true,
+        slidesPerView: 1,
+        spaceBetween: 20,
+        autoplay: { delay: 2500, disableOnInteraction: false },
+        breakpoints: {
+          640: { slidesPerView: 1 },
+          768: { slidesPerView: 2 },
+          1024: { slidesPerView: 3 }
+        }
+      });
+
+      // Female Gallery Slider
+      new Swiper('#femaleSwiper.swiper', {
+        loop: true,
+        slidesPerView: 1,
+        spaceBetween: 20,
+        autoplay: { delay: 3000, disableOnInteraction: false },
+        breakpoints: {
+          640: { slidesPerView: 1 },
+          768: { slidesPerView: 2 },
+          1024: { slidesPerView: 3 }
+        }
+      });
+    }
+
+    // Mobile Navigation Toggle
+    const hamburger = document.getElementById('hamburger');
+    const navMenu = document.getElementById('nav-menu');
+    const overlay = document.getElementById('overlay');
+    if (hamburger && navMenu) {
+      hamburger.addEventListener('click', () => navMenu.classList.toggle('active'));
+    }
+
+    // Smooth scroll for in-page anchors
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const targetId = this.getAttribute('href');
+        const targetEl = document.querySelector(targetId);
+        if (targetEl) {
+          e.preventDefault();
+          window.scrollTo({ top: targetEl.offsetTop - 70, behavior: 'smooth' });
+          if (navMenu && navMenu.classList.contains('active')) {
+            navMenu.classList.remove('active');
+          }
+        }
+      });
+    });
+
+    // Cart Functionality
+    const cartIcon = document.getElementById('cartIcon');
+    const cartSidebar = document.getElementById('cartSidebar');
+    const closeCartBtn = document.getElementById('closeCart');
+    const cartItemsContainer = document.getElementById('cartItems');
+    const emptyCartMessage = document.getElementById('emptyCart');
+    const cartTotalSection = document.getElementById('cartTotalSection');
+    const cartButtons = document.getElementById('cartButtons');
+    const cartCount = document.getElementById('cartCount');
+    const cartSubtotalDisplay = document.getElementById('cartSubtotal');
+    const cartTotalDisplay = document.getElementById('cartTotal');
+
+    let cart = JSON.parse(localStorage.getItem('niffyFashionCart')) || [];
+
+    function updateCartCount() {
+      if (!cartCount) return;
+      const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+      cartCount.textContent = total;
+    }
+
+    function renderCart() {
+      if (!cartItemsContainer) return;
+      cartItemsContainer.querySelectorAll('.cart-item').forEach(el => el.remove());
+
+      if (cart.length === 0) {
+        emptyCartMessage.style.display = 'block';
+        cartTotalSection.style.display = 'none';
+        cartButtons.style.display = 'none';
+        return;
+      }
+
+      emptyCartMessage.style.display = 'none';
+      cartTotalSection.style.display = 'block';
+      cartButtons.style.display = 'block';
+
+      let subtotal = 0;
+      cart.forEach((item, idx) => {
+        const priceNum = parseFloat(item.price.replace(/[^0-9.]/g, ''));
+        const totalItem = priceNum * item.quantity;
+        subtotal += totalItem;
+
+        const cartItem = document.createElement('div');
+        cartItem.className = 'cart-item';
+        cartItem.innerHTML = `
+          <div class="cart-item-image"><img src="${item.image}" alt="${item.name}"></div>
+          <div class="cart-item-info">
+            <h4 class="cart-item-title">${item.name}</h4>
+            <div class="cart-item-price">${item.price}</div>
+            <div class="cart-item-quantity">
+              <button class="quantity-btn" onclick="decreaseQuantity(${idx})">-</button>
+              <span class="quantity">${item.quantity}</span>
+              <button class="quantity-btn" onclick="increaseQuantity(${idx})">+</button>
+            </div>
+          </div>
+          <div class="remove-item" onclick="removeFromCart(${idx})"><i class="fas fa-trash"></i></div>
+        `;
+        cartItemsContainer.insertBefore(cartItem, emptyCartMessage);
+      });
+
+      if (cartSubtotalDisplay) cartSubtotalDisplay.textContent = `₦${subtotal.toLocaleString()}`;
+      if (cartTotalDisplay) cartTotalDisplay.textContent = `₦${subtotal.toLocaleString()}`;
+    }
+
+    function showToast(message) {
+      let toast = document.getElementById('toast-notification');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast-notification';
+        toast.style.cssText = 'position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background-color: rgba(0,0,0,0.8); color: #fff; padding: 12px 24px; border-radius: 5px; z-index: 10000; opacity: 0; transition: opacity 0.3s;';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = message;
+      toast.style.opacity = 1;
+      setTimeout(() => { toast.style.opacity = 0; }, 3000);
+    }
+
+    if (cartIcon && cartSidebar && overlay) {
+      cartIcon.addEventListener('click', () => {
+        cartSidebar.classList.add('active');
+        overlay.style.display = 'block';
+        renderCart();
+      });
+    }
+
+    if (closeCartBtn && overlay) {
+      closeCartBtn.addEventListener('click', () => {
+        cartSidebar.classList.remove('active');
+        overlay.style.display = 'none';
+      });
+
+      overlay.addEventListener('click', () => {
+        cartSidebar.classList.remove('active');
+        overlay.style.display = 'none';
+        if (modal && modal.style.display === 'block') window.closeModal();
+      });
+    }
+
+    window.closeCart = function() {
+      if (cartSidebar && overlay) {
+        cartSidebar.classList.remove('active');
+        overlay.style.display = 'none';
+      }
+    };
+
+    window.addToCart = function(id, name, price, image) {
+      const idx = cart.findIndex(i => i.id === id);
+      if (idx !== -1) {
+        cart[idx].quantity += 1;
+      } else {
+        cart.push({ id, name, price, image, quantity: 1 });
+      }
+      localStorage.setItem('niffyFashionCart', JSON.stringify(cart));
+      updateCartCount();
+      showToast(`${name} added to cart!`);
+      cartSidebar.classList.add('active');
+      overlay.style.display = 'block';
+      renderCart();
+    };
+
+    window.increaseQuantity = function(idx) {
+      cart[idx].quantity += 1;
+      localStorage.setItem('niffyFashionCart', JSON.stringify(cart));
+      updateCartCount();
+      renderCart();
+    };
+
+    window.decreaseQuantity = function(idx) {
+      if (cart[idx].quantity > 1) {
+        cart[idx].quantity -= 1;
+      } else {
+        window.removeFromCart(idx);
+        return;
+      }
+      localStorage.setItem('niffyFashionCart', JSON.stringify(cart));
+      updateCartCount();
+      renderCart();
+    };
+
+    window.removeFromCart = function(idx) {
+      const removed = cart.splice(idx, 1)[0];
+      localStorage.setItem('niffyFashionCart', JSON.stringify(cart));
+      updateCartCount();
+      renderCart();
+      showToast(`${removed.name} removed from cart`);
+    };
+
+    window.clearCart = function() {
+      cart = [];
+      localStorage.setItem('niffyFashionCart', JSON.stringify(cart));
+      updateCartCount();
+      renderCart();
+      showToast('Cart cleared');
+    };
+
+    window.checkoutViaWhatsApp = function() {
+      let message = 'Hello Niffy Fashion! I would like to place an order for:\n\n';
+      cart.forEach(item => {
+        message += `${item.quantity}x ${item.name} - ${item.price}\n`;
+      });
+      const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price.replace(/[^0-9.]/g, '')) * item.quantity), 0);
+      message += `\nTotal: ₦${subtotal.toLocaleString()}\n\nPlease confirm. Thanks!`;
+      const encoded = encodeURIComponent(message);
+      window.open(`https://wa.me/2348160064121?text=${encoded}`, '_blank');
+    };
+
+    // Product Quick View Modal
+    const modal = document.getElementById('productModal');
+    const closeModalBtn = document.getElementById('closeModal');
+    const modalImage = document.getElementById('modalImage');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalPrice = document.getElementById('modalPrice');
+    const modalDescription = document.getElementById('modalDescription');
+    const modalQuantity = document.getElementById('modalQuantity');
+    const modalAddToCartBtn = document.getElementById('modalAddToCart');
+
+    const products = [
+      { id: 1, name: 'Elegant Dress', price: '₦12,000', image: '7.jpg', description: 'A stunning elegant dress perfect for formal occasions. Made with premium Turkey fabrics for comfort and style.' },
+      { id: 2, name: 'Chic Jumpsuit', price: '₦15,000', image: '8.jpg', description: 'Versatile jumpsuit that transitions well from day to night. Features quality Vietnam fabric and stylish design.' },
+      { id: 3, name: 'Plus Size Collection', price: '₦10,000', image: '5.jpg', description: 'Flattering styles designed specifically for curves. Comfortable, breathable fabrics with elegant details.' },
+      { id: 4, name: 'Tops & Co-ords', price: '₦8,000', image: '2.jpg', description: 'Mix and match separates for endless outfit combinations. Perfect for casual and semi-formal settings.' },
+      { id: 5, name: 'Casual Collection', price: '₦9,500', image: '3.jpg', description: 'Everyday comfort meets style with our casual collection. Durable materials that maintain their shape and color.' },
+      { id: 6, name: 'Premium Wears', price: '₦18,000', image: '4.jpg', description: 'Luxury fashion pieces for special occasions. Premium imported fabrics with exquisite attention to detail.' },
+      { id: 7, name: 'Exclusive Turkey Collection', price: '₦20,000', image: 'f0.jpg', description: 'Limited edition pieces direct from Turkey. Unique designs you won\'t find elsewhere with superior quality.' },
+      { id: 8, name: 'Vietnam Special', price: '₦17,500', image: 'f2.jpg', description: 'Special selection from Vietnam featuring innovative designs and exceptional craftsmanship.' }
+    ];
+
+    document.querySelectorAll('.quick-view-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pid = parseInt(btn.getAttribute('data-id'), 10);
+        openProductModal(pid);
+      });
+    });
+
+    function openProductModal(pid) {
+      const product = products.find(p => p.id === pid);
+      if (!product || !modal) return;
+      modalImage.src = product.image;
+      modalTitle.textContent = product.name;
+      modalPrice.textContent = product.price;
+      modalDescription.textContent = product.description;
+      modalQuantity.value = 1;
+      document.querySelectorAll('.size-option').forEach(opt => opt.classList.remove('active'));
+      document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+
+      modalAddToCartBtn.onclick = function() {
+        const qty = parseInt(modalQuantity.value, 10);
+        for (let i = 0; i < qty; i++) {
+          window.addToCart(product.id, product.name, product.price, product.image);
+        }
+        window.closeModal();
+      };
+
+      modal.style.display = 'block';
+      overlay.style.display = 'block';
+    }
+
+    window.closeModal = function() {
+      if (modal) modal.style.display = 'none';
+      if (overlay) overlay.style.display = 'none';
+    };
+    if (closeModalBtn) closeModalBtn.addEventListener('click', window.closeModal);
+
+    window.selectSize = function(el) {
+      document.querySelectorAll('.size-option').forEach(opt => opt.classList.remove('active'));
+      el.classList.add('active');
+    };
+    window.selectColor = function(el) {
+      document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+      el.classList.add('active');
+    };
+    window.increaseModalQuantity = function() {
+      modalQuantity.value = parseInt(modalQuantity.value, 10) + 1;
+    };
+    window.decreaseModalQuantity = function() {
+      const val = parseInt(modalQuantity.value, 10);
+      if (val > 1) modalQuantity.value = val - 1;
+    };
+
+    // FAQ Toggle
+    window.toggleFAQ = function(el) {
+      const answer = el.nextElementSibling;
+      const icon = el.querySelector('.toggle-icon');
+      if (!answer) return;
+      answer.classList.toggle('active');
+      icon.textContent = answer.classList.contains('active') ? '−' : '+';
+    };
+
+    // Newsletter Form
+    const newsletterForm = document.querySelector('.newsletter-form');
+    if (newsletterForm) {
+      newsletterForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const emailInput = this.querySelector('.newsletter-input');
+        if (emailInput && emailInput.value.trim()) {
+          showToast('Thanks for subscribing to our newsletter!');
+          emailInput.value = '';
+        }
+      });
+    }
+
+    // Initialize cart badge
+    updateCartCount();
+  });
+</script>
  </body>
 </html>
-
