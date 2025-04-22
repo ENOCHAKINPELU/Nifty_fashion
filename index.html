@@ -162,8 +162,7 @@
     /* Hero Section with Background Slider */
     #hero {
       position: relative;
-      height: 85vh; /* Fallback */
-      height: calc(var(--vh, 1vh) * 85);
+      height: 85vh;
       background-size: cover;
       background-position: center;
       transition: background-image 1s ease-in-out;
@@ -340,21 +339,10 @@
       overflow: hidden;
       box-shadow: var(--shadow);
       transition: var(--transition);
-      transform: translateY(0);      
     }
     .product-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-    }
-    .product-card .btn {
-      opacity: 0.9;
-      transform: translateY(5px);
-      transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.3s ease;
-    }
-    .product-card:hover .btn {
-      opacity: 1;
-      transform: translateY(0);
-      background-color: var(--primary);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     }
     .product-image {
       position: relative;
@@ -878,21 +866,7 @@
     .whatsapp-float:hover {
       transform: scale(1.1);
     }
-    /* Cart notification badge animation */
-    @keyframes pulse {
-      0% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.2);
-      }
-      100% {
-        transform: scale(1);
-      }
-    }
-    .cart-count {
-      animation: pulse 1s ease;
-    }      
+    
     /* Responsive Styles */
     @media (max-width: 1024px) {
       .section {
@@ -914,12 +888,7 @@
       }
       .hamburger {
         display: block;
-        transition: color 0.3s ease;
       }
-      .hamburger:hover {
-        color: var(--primary);
-      }
-            
       nav ul {
         display: none;
         flex-direction: column;
@@ -942,29 +911,6 @@
       nav ul li {
         margin: 10px 0;
       }
-      nav ul li a {
-        padding: 10px 0;
-      }
-      nav ul li a.active {
-        color: var(--primary);
-      }
-      nav ul li a.active:after {
-        width: 100%;
-      }
-      .nav-actions {
-        display: none;
-      }
-      .cart-icon {
-        font-size: 1.5em;
-      }
-      .cart-count {
-        font-size: 0.8em;
-        padding: 2px 5px;
-      }
-      .cart-sidebar {
-        width: 100%;
-        max-width: 100%;
-      }
       .product-grid {
         grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
       }
@@ -985,29 +931,6 @@
       }
       .newsletter-btn {
         border-radius: 5px;
-      }
-      .contact-card {
-        margin-bottom: 15px;
-      }
-      .contact-grid {
-        grid-template-columns: 1fr;
-      }
-      .social-icons {
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      .social-icon {
-        width: 50px;
-        height: 50px;
-      }
-      .modal-content {
-        width: 90%;
-        margin: 0 auto;
-        max-width: 100%;
-        border-radius: 10px;
-      }
-      .modal-details {
-        padding: 20px;
       }
     }
     @media (max-width: 480px) {
@@ -1049,59 +972,6 @@
       }
       .modal-title {
         font-size: 1.5em;
-      }
-      input:focus, textarea:focus {
-        outline: 2px solid var(--primary);
-      }
-      .modal-quantity {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .modal-quantity h4 {
-        margin-bottom: 10px;
-      }
-      .quantity-selector {
-        width: 100%;
-      }
-      .quantity-btn {
-        width: 50%;
-        padding: 10px;
-      }
-      .quantity-input {
-        width: 100%;
-        padding: 10px;
-        text-align: center;
-      }
-      .modal-actions {
-        flex-direction: column;
-        gap: 10px;
-      }
-      .modal-actions .btn {
-        width: 100%;
-        padding: 15px;
-      }
-      .modal-actions .btn-outline {
-        width: 100%;
-        padding: 15px;
-      }
-      .modal-actions .btn-outline:hover {
-        background: var(--primary);
-        color: var(--white);
-      }
-      .modal-actions .btn:hover {
-        background: var(--primary-dark);
-      }
-      .modal-actions .btn:active {
-        transform: scale(0.98);
-      }
-      .modal-actions .btn-outline:active {
-        transform: scale(0.98);
-      }
-      .modal-actions .btn:active, .modal-actions .btn-outline:active {
-        transition: transform 0.1s ease;
-      }
-      .modal-actions .btn:focus, .modal-actions .btn-outline:focus {
-        outline: 2px solid var(--primary);
       }
     }
   </style>
@@ -2182,241 +2052,6 @@ function setVhVariable() {
       };
     });
   });
-  // Add this code to the existing JavaScript file
+  </script>
 
-// Recently viewed products
-let recentlyViewed = [];
-const MAX_RECENTLY_VIEWED = 4;
-
-function addToRecentlyViewed(productId) {
-  // Don't add if already the most recent
-  if (recentlyViewed[0] === productId) return;
   
-  // Remove if exists elsewhere in the array
-  recentlyViewed = recentlyViewed.filter(id => id !== productId);
-  
-  // Add to front of array
-  recentlyViewed.unshift(productId);
-  
-  // Keep array at max length
-  if (recentlyViewed.length > MAX_RECENTLY_VIEWED) {
-    recentlyViewed.pop();
-  }
-  
-  // Save to localStorage
-  localStorage.setItem('niffyRecentlyViewed', JSON.stringify(recentlyViewed));
-}
-
-// Load recently viewed products
-function loadRecentlyViewed() {
-  const saved = localStorage.getItem('niffyRecentlyViewed');
-  if (saved) {
-    try {
-      recentlyViewed = JSON.parse(saved);
-    } catch (error) {
-      console.error('Error loading recently viewed products:', error);
-    }
-  }
-}
-
-// Back to top button functionality
-function addBackToTopButton() {
-  const button = document.createElement('button');
-  button.innerHTML = '<i class="fas fa-arrow-up"></i>';
-  button.className = 'back-to-top';
-  button.style.position = 'fixed';
-  button.style.bottom = '90px';
-  button.style.right = '20px';
-  button.style.display = 'none';
-  button.style.backgroundColor = 'var(--primary)';
-  button.style.color = 'white';
-  button.style.width = '50px';
-  button.style.height = '50px';
-  button.style.borderRadius = '50%';
-  button.style.border = 'none';
-  button.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-  button.style.cursor = 'pointer';
-  button.style.zIndex = '99';
-  button.style.transition = 'all 0.3s ease';
-  
-  document.body.appendChild(button);
-  
-  button.addEventListener('click', () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  });
-  
-  window.addEventListener('scroll', () => {
-    if (window.pageYOffset > 300) {
-      button.style.display = 'block';
-    } else {
-      button.style.display = 'none';
-    }
-  });
-}
-
-// Product search functionality
-function setupSearch() {
-  // Create search bar in the header
-  const searchContainer = document.createElement('div');
-  searchContainer.className = 'search-container';
-  searchContainer.style.position = 'relative';
-  
-  const searchInput = document.createElement('input');
-  searchInput.type = 'text';
-  searchInput.placeholder = 'Search products...';
-  searchInput.className = 'search-input';
-  searchInput.style.padding = '8px 15px';
-  searchInput.style.border = 'none';
-  searchInput.style.borderRadius = '20px';
-  searchInput.style.outline = 'none';
-  searchInput.style.width = '0';
-  searchInput.style.opacity = '0';
-  searchInput.style.transition = 'all 0.3s ease';
-  
-  const searchIcon = document.createElement('button');
-  searchIcon.className = 'search-icon';
-  searchIcon.innerHTML = '<i class="fas fa-search"></i>';
-  searchIcon.style.background = 'none';
-  searchIcon.style.border = 'none';
-  searchIcon.style.color = 'white';
-  searchIcon.style.cursor = 'pointer';
-  searchIcon.style.fontSize = '1.2em';
-  
-  searchContainer.appendChild(searchInput);
-  searchContainer.appendChild(searchIcon);
-  
-  // Add search container to nav actions
-  const navActions = document.querySelector('.nav-actions');
-  navActions.insertBefore(searchContainer, navActions.firstChild);
-  
-  // Toggle search input
-  let searchOpen = false;
-  searchIcon.addEventListener('click', () => {
-    if (searchOpen) {
-      if (searchInput.value.trim() !== '') {
-        searchProducts(searchInput.value.trim());
-      } else {
-        searchInput.style.width = '0';
-        searchInput.style.opacity = '0';
-        searchOpen = false;
-      }
-    } else {
-      searchInput.style.width = '150px';
-      searchInput.style.opacity = '1';
-      searchInput.focus();
-      searchOpen = true;
-    }
-  });
-  
-  // Search on enter key
-  searchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && searchInput.value.trim() !== '') {
-      searchProducts(searchInput.value.trim());
-    }
-  });
-}
-
-// Product search implementation
-function searchProducts(query) {
-  query = query.toLowerCase();
-  
-  // Get all product cards
-  const products = document.querySelectorAll('.product-card');
-  let foundCount = 0;
-  
-  products.forEach(product => {
-    const title = product.querySelector('.product-title').textContent.toLowerCase();
-    
-    if (title.includes(query)) {
-      product.style.display = 'block';
-      foundCount++;
-      
-      // Highlight matching text
-      const titleElement = product.querySelector('.product-title');
-      const regex = new RegExp(`(${query})`, 'gi');
-      titleElement.innerHTML = titleElement.textContent.replace(
-        regex, '<span style="background-color: rgba(243, 156, 18, 0.3)">$1</span>'
-      );
-    } else {
-      product.style.display = 'none';
-    }
-  });
-  
-  // Scroll to products section
-  document.querySelector('#products').scrollIntoView({ behavior: 'smooth' });
-  
-  // Show search results message
-  const resultsMessage = document.createElement('div');
-  resultsMessage.className = 'search-results-message';
-  resultsMessage.textContent = `Found ${foundCount} products matching "${query}"`;
-  resultsMessage.style.textAlign = 'center';
-  resultsMessage.style.margin = '20px 0';
-  resultsMessage.style.padding = '10px';
-  resultsMessage.style.backgroundColor = 'rgba(243, 156, 18, 0.1)';
-  resultsMessage.style.borderRadius = '5px';
-  
-  const existingMessage = document.querySelector('.search-results-message');
-  if (existingMessage) {
-    existingMessage.remove();
-  }
-  
-  const productsHeader = document.querySelector('#products .section-subtitle');
-  productsHeader.parentNode.insertBefore(resultsMessage, productsHeader.nextSibling);
-  
-  // Add clear search button
-  const clearButton = document.createElement('button');
-  clearButton.textContent = 'Clear Search';
-  clearButton.className = 'btn btn-outline';
-  clearButton.style.marginLeft = '10px';
-  clearButton.style.padding = '5px 15px';
-  clearButton.style.fontSize = '0.9em';
-  
-  resultsMessage.appendChild(clearButton);
-  
-  clearButton.addEventListener('click', () => {
-    // Reset product display
-    products.forEach(product => {
-      product.style.display = 'block';
-      const titleElement = product.querySelector('.product-title');
-      titleElement.innerHTML = titleElement.textContent; // Remove highlighting
-    });
-    
-    // Remove message
-    resultsMessage.remove();
-    
-    // Clear search input
-    document.querySelector('.search-input').value = '';
-  });
-}
-
-// Initialize enhanced features
-window.addEventListener('DOMContentLoaded', () => {
-  loadRecentlyViewed();
-  addBackToTopButton();
-  setupSearch();
-  
-  // Update openQuickView to add products to recently viewed
-  const originalOpenQuickView = window.openQuickView;
-  window.openQuickView = function(id) {
-    addToRecentlyViewed(parseInt(id));
-    originalOpenQuickView(id);
-  };
-  
-  // Add view count to products (simulated)
-  document.querySelectorAll('.product-card').forEach(card => {
-    const viewCount = Math.floor(Math.random() * 50) + 10;
-    const viewsElement = document.createElement('div');
-    viewsElement.className = 'product-views';
-    viewsElement.innerHTML = `<i class="fas fa-eye"></i> ${viewCount} views`;
-    viewsElement.style.fontSize = '0.8em';
-    viewsElement.style.color = '#777';
-    viewsElement.style.marginTop = '5px';
-    
-    const productInfo = card.querySelector('.product-info');
-    productInfo.appendChild(viewsElement);
-  });
-});
-  </script>  
